@@ -1,0 +1,7 @@
+.idea
+.vscode
+**/*.rs.bk
+/*.data
+/*.gz
+*.local
+/target
