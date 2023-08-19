@@ -3,10 +3,11 @@
 
 use anyhow::Result;
 use futures::future::join_all;
+use indexmap::IndexMap;
 use reqwest::{Client, Url};
 use robotstxt::DefaultMatcher;
 use scraper::{Html, Selector};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use tokio::sync::{RwLock, Semaphore};
 use tokio::time::{sleep, Duration};
 
@@ -96,9 +97,9 @@ impl CrawlerBuilder {
 
 /// Main structure for the `Crawler` containing necessary utilities and caches.
 pub struct Crawler {
-    config: CrawlerConfig,                              // Configuration parameters.
-    client: Client,                                     // HTTP client to make web requests.
-    robots_cache: RwLock<HashMap<String, RobotsCache>>, // Cache for `robots.txt` per domain.
+    config: CrawlerConfig, // Configuration parameters.
+    client: Client,        // HTTP client to make web requests.
+    robots_cache: RwLock<IndexMap<String, RobotsCache>>, // Cache for `robots.txt` per domain.
 }
 
 impl Crawler {
@@ -107,7 +108,7 @@ impl Crawler {
         Ok(Self {
             config,
             client: Client::builder().user_agent(USER_AGENT).build()?,
-            robots_cache: RwLock::new(HashMap::new()),
+            robots_cache: RwLock::new(IndexMap::new()),
         })
     }
 
@@ -123,9 +124,9 @@ impl Crawler {
         &self,
         semaphore: &Semaphore, // Rate limiting and concurrency management.
         url: Url,
-        depth: usize,                           // Current depth of the crawl.
-        visited: &RwLock<HashSet<Url>>,         // Set of visited URLs to avoid redundancy.
-        content: &RwLock<HashMap<Url, String>>, // Collected content per URL.
+        depth: usize,                            // Current depth of the crawl.
+        visited: &RwLock<HashSet<Url>>,          // Set of visited URLs to avoid redundancy.
+        content: &RwLock<IndexMap<Url, String>>, // Collected content per URL.
     ) -> Result<()> {
         // Recursion base cases.
         if depth > self.config.max_depth
@@ -228,12 +229,12 @@ impl Crawler {
     /// Initiates the crawling process from a specified root URL.
     ///
     /// Returns a map of visited URLs and their corresponding HTML content.
-    pub async fn start<S: AsRef<str>>(&self, url: S) -> Result<HashMap<Url, String>> {
+    pub async fn start<S: AsRef<str>>(&self, url: S) -> Result<IndexMap<Url, String>> {
         let root_url = Url::parse(url.as_ref())?;
 
         let semaphore = Semaphore::new(self.config.max_concurrent_requests);
         let visited = RwLock::new(HashSet::new());
-        let content = RwLock::new(HashMap::new());
+        let content = RwLock::new(IndexMap::new());
 
         self.crawl(&semaphore, root_url, 0, &visited, &content)
             .await?;
