@@ -2,6 +2,7 @@
 
 A lightweight and efficient web crawler in Rust, optimized for concurrent scraping while respecting `robots.txt` rules.
 
+[![Crates.io](https://img.shields.io/crates/v/crawly.svg)](https://crates.io/crates/crawly)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Version](https://img.shields.io/badge/version-0.1.0-green)
 [![Repository](https://img.shields.io/badge/github-repository-orange)](https://github.com/CrystalSoft/crawly)
