@@ -61,6 +61,7 @@ async fn main() -> Result<()> {
         .with_max_pages(100)
         .with_max_concurrent_requests(50)
         .with_rate_limit_wait_seconds(2)
+        .with_robots(true)
         .build()?;
     
     let results = crawler.crawl_url("https://www.example.com").await?;

@@ -32,6 +32,7 @@ struct CrawlerConfig {
     max_pages: usize,
     max_concurrent_requests: usize,
     rate_limit_wait_seconds: u64,
+    robots: bool,
 }
 
 impl Default for CrawlerConfig {
@@ -42,6 +43,7 @@ impl Default for CrawlerConfig {
             max_pages: MAX_PAGES,
             max_concurrent_requests: MAX_CONCURRENT_REQUESTS,
             rate_limit_wait_seconds: RATE_LIMIT_WAIT_SECONDS,
+            robots: true,
         }
     }
 }
@@ -86,6 +88,12 @@ impl CrawlerBuilder {
     /// Define a rate limit delay in seconds.
     pub fn with_rate_limit_wait_seconds(mut self, seconds: u64) -> Self {
         self.config.rate_limit_wait_seconds = seconds;
+        self
+    }
+
+    /// Enable or disable `robots.txt` handling
+    pub fn with_robots(mut self, robots: bool) -> Self {
+        self.config.robots = robots;
         self
     }
 
@@ -138,59 +146,66 @@ impl Crawler {
 
         let permit = semaphore.acquire().await;
 
-        // Fetch and handle `robots.txt` for the domain.
-        let robots_url = format!(
-            "{}://{}/robots.txt",
-            url.scheme(),
-            url.host().ok_or(anyhow::anyhow!("Host not found."))?
-        );
-        let domain = url.domain().unwrap_or_default().to_string();
-
-        let mut robots_cache = self.robots_cache.write().await;
-
-        // Get cached robots info or fetch if not cached.
-        let (robots_content, delay_seconds) = if let Some(info) = robots_cache.get(&domain) {
-            (
-                info.content.clone(),
-                info.crawl_delay.unwrap_or(RATE_LIMIT_WAIT_SECONDS),
-            )
-        } else {
-            let robots_content = self.client.get(&robots_url).send().await?.text().await?;
-
-            let delay_seconds = robots_content
-                .lines()
-                .filter_map(|line| {
-                    if line.contains("Crawl-delay") {
-                        line.split(':').last()?.trim().parse().ok()
-                    } else {
-                        None
-                    }
-                })
-                .next()
-                .unwrap_or(RATE_LIMIT_WAIT_SECONDS);
-
-            robots_cache.insert(
-                domain.clone(),
-                RobotsCache {
-                    content: robots_content.clone(),
-                    crawl_delay: Some(delay_seconds),
-                },
+        if self.config.robots {
+            // Fetch and handle `robots.txt` for the domain.
+            let robots_url = format!(
+                "{}://{}/robots.txt",
+                url.scheme(),
+                url.host().ok_or(anyhow::anyhow!("Host not found."))?
             );
-            (robots_content, delay_seconds)
-        };
+            let domain = url.domain().unwrap_or_default().to_string();
 
-        drop(robots_cache);
+            let mut robots_cache = self.robots_cache.write().await;
 
-        // Respect the crawl delay specified by `robots.txt`.
-        sleep(Duration::from_secs(delay_seconds)).await;
+            // Get cached robots info or fetch if not cached.
+            let robots = if let Some(info) = robots_cache.get(&domain) {
+                Some((
+                    info.content.clone(),
+                    info.crawl_delay.unwrap_or(RATE_LIMIT_WAIT_SECONDS),
+                ))
+            } else if let Ok(response) = self.client.get(&robots_url).send().await {
+                let robots_content = response.text().await?;
 
-        // Check permission from `robots.txt` before proceeding.
-        if !DefaultMatcher::default().one_agent_allowed_by_robots(
-            &robots_content,
-            USER_AGENT,
-            url.as_str(),
-        ) {
-            return Ok(());
+                let delay_seconds = robots_content
+                    .lines()
+                    .filter_map(|line| {
+                        if line.contains("Crawl-delay") {
+                            line.split(':').last()?.trim().parse().ok()
+                        } else {
+                            None
+                        }
+                    })
+                    .next()
+                    .unwrap_or(RATE_LIMIT_WAIT_SECONDS);
+
+                robots_cache.insert(
+                    domain.clone(),
+                    RobotsCache {
+                        content: robots_content.clone(),
+                        crawl_delay: Some(delay_seconds),
+                    },
+                );
+
+                Some((robots_content, delay_seconds))
+            } else {
+                None
+            };
+
+            drop(robots_cache);
+
+            if let Some((robots_content, delay_seconds)) = robots {
+                // Respect the crawl delay specified by `robots.txt`.
+                sleep(Duration::from_secs(delay_seconds)).await;
+
+                // Check permission from `robots.txt` before proceeding.
+                if !DefaultMatcher::default().one_agent_allowed_by_robots(
+                    &robots_content,
+                    USER_AGENT,
+                    url.as_str(),
+                ) {
+                    return Ok(());
+                }
+            }
         }
 
         // Fetch the page content.
