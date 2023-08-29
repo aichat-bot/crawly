@@ -10,10 +10,11 @@ A lightweight and efficient web crawler in Rust, optimized for concurrent scrapi
 
 ## 🚀 Features
 
-- **Concurrent crawling**: Takes advantage of concurrency for efficient scraping across multiple cores.
-- **Respects `robots.txt`**: Automatically fetches and adheres to website scraping guidelines.
-- **DFS algorithm**: Uses a depth-first search algorithm to crawl web links.
-- **Customizable with Builder Pattern**: Tailor the depth of crawling, rate limits, and other parameters effortlessly.
+- **Concurrent crawling**: Takes advantage of concurrency for efficient scraping across multiple cores;
+- **Respects `robots.txt`**: Automatically fetches and adheres to website scraping guidelines;
+- **DFS algorithm**: Uses a depth-first search algorithm to crawl web links;
+- **Customizable with Builder Pattern**: Tailor the depth of crawling, rate limits, and other parameters effortlessly;
+- **Cloudflare's detection**: If the destination URL is hosted with Cloudflare and a mitigation is found, the URL will be skipped;
 - **Built with Rust**: Guarantees memory safety and top-notch speed.
 
 ## 📦 Installation
@@ -22,7 +23,7 @@ Add `crawly` to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-crawly = "0.1.0"
+crawly = "^0.1"
 ```
 
 ## 🛠️ Usage
@@ -73,6 +74,15 @@ async fn main() -> Result<()> {
     Ok(())
 }
 ```
+
+## 🛡️ Cloudflare
+
+This crate will detect Cloudflare hosted sites and if the header `cf-mitigated` is found, the URL will be skipped without
+throwing any error.
+
+## 📜 Tracing
+
+Every function is instrumented, also this crate will emit some DEBUG messages for better comprehending the crawling flow.
 
 ## 🤝 Contributing
 

@@ -1,7 +1,7 @@
 [package]
 name = "crawly"
 description = "A lightweight async Web crawler in Rust, optimized for concurrent scraping while respecting `robots.txt` rules."
-version = "0.1.3"
+version = "0.1.4"
 authors = ["Dario Cancelliere <dario.cancelliere@gmail.com>"]
 edition = "2021"
 repository = "https://github.com/CrystalSoft/crawly"
@@ -20,6 +20,9 @@ default = ["rustls-tls"]
 # Tokio and Futures
 tokio = { version =  "^1.28", default-features = false, features = ["sync", "time"] }
 futures = { version = "^0.3", default-features = false, features = ["alloc"] }
+
+# Tracing
+tracing = { version = "^0.1", default-features = false, features = ["attributes"] }
 
 # Utils
 anyhow = { version = "^1.0", default-features = false, features = ["std"] }
