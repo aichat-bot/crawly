@@ -31,6 +31,7 @@ struct RobotsCache {
 /// Configuration parameters for the `Crawler`.
 /// Defines bounds and behaviors for the crawling process.
 struct CrawlerConfig {
+    user_agent: String,
     max_depth: usize,
     max_pages: usize,
     max_concurrent_requests: usize,
@@ -42,6 +43,7 @@ impl Default for CrawlerConfig {
     /// Default configuration for the crawler.
     fn default() -> Self {
         Self {
+            user_agent: USER_AGENT.into(),
             max_depth: MAX_DEPTH,
             max_pages: MAX_PAGES,
             max_concurrent_requests: MAX_CONCURRENT_REQUESTS,
@@ -100,6 +102,12 @@ impl CrawlerBuilder {
         self
     }
 
+    /// Enable or disable `robots.txt` handling
+    pub fn with_user_agent<S: AsRef<str>>(mut self, user_agent: S) -> Self {
+        self.config.user_agent = user_agent.as_ref().into();
+        self
+    }
+
     /// Consumes the builder and returns a configured `Crawler` instance.
     pub fn build(self) -> Result<Crawler> {
         Crawler::from_config(self.config)
@@ -117,9 +125,11 @@ impl Crawler {
     /// Initializes the crawler with a given configuration.
     fn from_config(config: CrawlerConfig) -> Result<Self> {
         Ok(Self {
-            config,
-            client: Client::builder().user_agent(USER_AGENT).build()?,
+            client: Client::builder()
+                .user_agent(config.user_agent.as_str())
+                .build()?,
             robots_cache: RwLock::new(IndexMap::new()),
+            config,
         })
     }
 
@@ -217,7 +227,7 @@ impl Crawler {
                 // Check permission from `robots.txt` before proceeding.
                 if !DefaultMatcher::default().one_agent_allowed_by_robots(
                     &robots_content,
-                    USER_AGENT,
+                    self.config.user_agent.as_str(),
                     url.as_str(),
                 ) {
                     return Ok(());
