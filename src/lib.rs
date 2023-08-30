@@ -141,7 +141,7 @@ impl Crawler {
     /// Asynchronously crawls a URL. Honors `robots.txt`, maintains state about visited URLs,
     /// and manages rate limits and concurrency.
     #[async_recursion::async_recursion]
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(skip(self, semaphore, visited, content))]
     async fn crawl(
         &self,
         semaphore: &Semaphore, // Rate limiting and concurrency management.
@@ -278,7 +278,7 @@ impl Crawler {
     }
 
     /// Extracts hyperlinks from given HTML content.
-    #[tracing::instrument]
+    #[tracing::instrument(skip(content))]
     fn extract_links(content: &str) -> Result<Vec<String>> {
         let document = Html::parse_document(content);
         let selector = Selector::parse("a").map_err(|error| anyhow::anyhow!("{:?}", error))?;

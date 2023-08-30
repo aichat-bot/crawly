@@ -1,7 +1,7 @@
 [package]
 name = "crawly"
 description = "A lightweight async Web crawler in Rust, optimized for concurrent scraping while respecting `robots.txt` rules."
-version = "0.1.5"
+version = "0.1.6"
 authors = ["Dario Cancelliere <dario.cancelliere@gmail.com>"]
 edition = "2021"
 repository = "https://github.com/CrystalSoft/crawly"
