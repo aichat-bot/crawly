@@ -4,12 +4,14 @@
 use anyhow::Result;
 use futures::future::join_all;
 use indexmap::IndexMap;
+pub use mime::Mime;
 use reqwest::header::HeaderValue;
 use reqwest::{Client, Url};
 use robotstxt::DefaultMatcher;
 use scraper::{Html, Selector};
 use std::collections::HashSet;
 use std::fmt::Debug;
+use std::str::FromStr;
 use tokio::sync::{RwLock, Semaphore};
 use tokio::time::{sleep, Duration};
 
@@ -37,6 +39,7 @@ struct CrawlerConfig {
     max_concurrent_requests: usize,
     rate_limit_wait_seconds: u64,
     robots: bool,
+    allowed_mimes: Vec<Mime>,
 }
 
 impl Default for CrawlerConfig {
@@ -49,6 +52,7 @@ impl Default for CrawlerConfig {
             max_concurrent_requests: MAX_CONCURRENT_REQUESTS,
             rate_limit_wait_seconds: RATE_LIMIT_WAIT_SECONDS,
             robots: true,
+            allowed_mimes: vec![],
         }
     }
 }
@@ -102,9 +106,15 @@ impl CrawlerBuilder {
         self
     }
 
-    /// Enable or disable `robots.txt` handling
+    /// Set a custom user agent
     pub fn with_user_agent<S: AsRef<str>>(mut self, user_agent: S) -> Self {
         self.config.user_agent = user_agent.as_ref().into();
+        self
+    }
+
+    /// Allow only a set of MIMEs
+    pub fn with_allowed_mimes(mut self, mime_types: Vec<Mime>) -> Self {
+        self.config.allowed_mimes = mime_types;
         self
     }
 
@@ -233,6 +243,8 @@ impl Crawler {
                     return Ok(());
                 }
             }
+        } else {
+            sleep(Duration::from_secs(self.config.rate_limit_wait_seconds)).await;
         }
 
         let response = self.client.get(url.clone()).send().await?;
@@ -245,8 +257,33 @@ impl Crawler {
         }
 
         // Fetch the page content.
-        let html = response.text().await?;
-        content.write().await.insert(url.clone(), html.clone());
+        let page = response.bytes().await?.to_vec();
+
+        if !self.config.allowed_mimes.is_empty()
+            && infer::get(page.as_slice())
+                .map(|mime| {
+                    if let Ok(mime) = Mime::from_str(mime.mime_type()) {
+                        self.config.allowed_mimes.contains(&mime)
+                    } else {
+                        true
+                    }
+                })
+                .unwrap_or(true)
+        {
+            // Explicitly dropping the permit to free up concurrency slot.
+            drop(permit);
+
+            visited.write().await.insert(url.clone());
+
+            return Ok(());
+        }
+
+        // Fetch the page content.
+        let url_content = String::from_utf8(page)?;
+        content
+            .write()
+            .await
+            .insert(url.clone(), url_content.clone());
 
         // Explicitly dropping the permit to free up concurrency slot.
         drop(permit);
@@ -255,7 +292,7 @@ impl Crawler {
 
         // Continue crawling by processing extracted links recursively.
         let _ = join_all(
-            Self::extract_links(&html)
+            Self::extract_links(url_content.as_str())
                 .map(|links| {
                     tracing::debug!(
                         "Found other sub-URLs {{ len: {}, links: {links:#?} }}",
