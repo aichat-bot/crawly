@@ -2,15 +2,20 @@
 
 ## 1. Purpose
 
-A primary goal of `crawly` is to be inclusive to the largest number of contributors, with the most varied and diverse backgrounds possible. As such, we are committed to providing a friendly, safe, and welcoming environment for all, regardless of gender, sexual orientation, ability, ethnicity, socioeconomic status, and religion (or lack thereof).
+A primary goal of `crawly` is to be inclusive to the largest number of contributors, with the most varied and diverse
+backgrounds possible. As such, we are committed to providing a friendly, safe, and welcoming environment for all,
+regardless of gender, sexual orientation, ability, ethnicity, socioeconomic status, and religion (or lack thereof).
 
-This Code of Conduct outlines our expectations for all those who participate in our community, as well as the consequences for unacceptable behavior.
+This Code of Conduct outlines our expectations for all those who participate in our community, as well as the
+consequences for unacceptable behavior.
 
 ## 2. Open Source Citizenship
 
-A supplemental goal of this Code of Conduct is to increase open source citizenship by encouraging participants to recognize and strengthen the relationships between our actions and their effects on our community.
+A supplemental goal of this Code of Conduct is to increase open source citizenship by encouraging participants to
+recognize and strengthen the relationships between our actions and their effects on our community.
 
-Communities mirror the societies in which they exist and positive action is essential to counteract the many forms of inequality and abuses of power that exist in society.
+Communities mirror the societies in which they exist and positive action is essential to counteract the many forms of
+inequality and abuses of power that exist in society.
 
 ## 3. Expected Behavior
 
@@ -37,26 +42,34 @@ The following behaviors are considered harassment and are unacceptable within ou
 
 ## 5. Consequences of Unacceptable Behavior
 
-Unacceptable behavior from any community member, including sponsors and those with decision-making authority, will not be tolerated. Anyone asked to stop unacceptable behavior is expected to comply immediately.
+Unacceptable behavior from any community member, including sponsors and those with decision-making authority, will not
+be tolerated. Anyone asked to stop unacceptable behavior is expected to comply immediately.
 
-If a community member engages in unacceptable behavior, the community organizers may take any action they deem appropriate, up to and including a temporary ban or permanent expulsion from the community without warning.
+If a community member engages in unacceptable behavior, the community organizers may take any action they deem
+appropriate, up to and including a temporary ban or permanent expulsion from the community without warning.
 
 ## 6. Reporting Guidelines
 
-If you are subject to or witness unacceptable behavior, or have any other concerns, please notify a community organizer as soon as possible.
+If you are subject to or witness unacceptable behavior, or have any other concerns, please notify a community organizer
+as soon as possible.
 
 ## 7. Addressing Grievances
 
-Only permanent resolutions (such as bans) may be appealed. To appeal a decision of the working group, contact the project team at [info@crystalsoft.it](mailto:info@crystalsoft.it) with your appeal and the working group will review the decision.
+Only permanent resolutions (such as bans) may be appealed. To appeal a decision of the working group, contact the
+project team at [info@ai-chat.it](mailto:info@ai-chat.it) with your appeal and the working group will review the
+decision.
 
 ## 8. Scope
 
-We expect all community participants (contributors, paid or otherwise; sponsors; and other guests) to abide by this Code of Conduct in all community venues–online and in-person–as well as in all one-on-one communications pertaining to community business.
+We expect all community participants (contributors, paid or otherwise; sponsors; and other guests) to abide by this Code
+of Conduct in all community venues–online and in-person–as well as in all one-on-one communications pertaining to
+community business.
 
 ## 9. Contact info
 
-[info@crystalsoft.it](mailto:info@crystalsoft.it)
+[info@ai-chat.it](mailto:info@ai-chat.it)
 
 ## 10. License and attribution
 
-This Code of Conduct is distributed under a Creative Commons Attribution-ShareAlike license. Portions of the text are derived from the Django Code of Conduct and the Geek Feminism Anti-Harassment Policy.
+This Code of Conduct is distributed under a Creative Commons Attribution-ShareAlike license. Portions of the text are
+derived from the Django Code of Conduct and the Geek Feminism Anti-Harassment Policy.

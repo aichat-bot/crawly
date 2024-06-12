@@ -161,20 +161,24 @@ impl Crawler {
         content: &RwLock<IndexMap<Url, String>>, // Collected content per URL.
     ) -> Result<()> {
         // Recursion base cases.
-        if depth > self.config.max_depth
-            || visited.read().await.len() > self.config.max_pages
-            || visited.read().await.contains(&url)
         {
-            tracing::debug!(
-                "Reached the limit {{ depth: {depth}, visited: {} }}.",
-                visited.read().await.len()
-            );
+            let visited_read = visited.read().await;
+            if depth > self.config.max_depth
+                || visited_read.len() >= self.config.max_pages
+                || visited_read.contains(&url)
+            {
+                tracing::debug!(
+                    "Reached the limit {{ depth: {depth}, visited: {} }}.",
+                    visited_read.len()
+                );
 
-            return Ok(());
+                return Ok(());
+            }
         }
 
         let permit = semaphore.acquire().await;
 
+        // Robots.txt handling logic
         if self.config.robots {
             // Fetch and handle `robots.txt` for the domain.
             let robots_url = format!(
@@ -288,7 +292,13 @@ impl Crawler {
         // Explicitly dropping the permit to free up concurrency slot.
         drop(permit);
 
-        visited.write().await.insert(url.clone());
+        {
+            let mut visited_write = visited.write().await;
+            visited_write.insert(url.clone());
+            if visited_write.len() >= self.config.max_pages {
+                return Ok(());
+            }
+        }
 
         // Continue crawling by processing extracted links recursively.
         let _ = join_all(
